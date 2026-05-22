@@ -315,6 +315,79 @@ def _ok(msg: str) -> None:
 
 # ── Mission verification routines ─────────────────────────────────────────────
 
+def _verify_mission_1() -> bool:
+    """Sleeping Guard Pod: greeting-deployment must have all pods Running with a valid image."""
+    ns = "cluster-heist"
+    result = _run(["kubectl", "get", "deployment", "greeting-deployment", "-n", ns,
+                   "-o", "jsonpath={.spec.template.spec.containers[0].image}"])
+    if result.returncode != 0:
+        _fail("greeting-deployment not found."); return False
+
+    image = result.stdout.strip()
+    if "nginxx" in image:
+        _fail(f"Image is still '{image}' — fix the typo in the repository name."); return False
+
+    # Check at least one pod is Running
+    pods = _run(["kubectl", "get", "pods", "-n", ns, "-l", "component=greeting",
+                 "-o", "jsonpath={.items[*].status.phase}"])
+    phases = pods.stdout.strip().split()
+    if not any(p == "Running" for p in phases):
+        _fail(f"No greeting pod is Running yet (phases: {phases})."); return False
+
+    _ok(f"greeting-deployment image is '{image}' and pod is Running.")
+    return True
+
+
+def _verify_mission_2() -> bool:
+    """Door With the Wrong Label: greeting-service must have at least one ready endpoint."""
+    ns = "cluster-heist"
+    result = _run(["kubectl", "get", "endpoints", "greeting-service", "-n", ns,
+                   "-o", "jsonpath={.subsets[0].addresses[0].ip}"])
+    if result.returncode != 0:
+        _fail("greeting-service not found."); return False
+    if not result.stdout.strip():
+        _fail("greeting-service has no endpoints. Fix the selector label (gaurd -> guard)."); return False
+
+    _ok(f"greeting-service has active endpoint: {result.stdout.strip()}")
+    return True
+
+
+def _verify_mission_3() -> bool:
+    """ConfigMap Combination Lock: heist-config must have correct VAULT_MODE and ROOM_NAME."""
+    ns = "cluster-heist"
+    passed = True
+    for key, expected in [("VAULT_MODE", "training"), ("ROOM_NAME", "helm-lab")]:
+        result = _run(["kubectl", "get", "configmap", "heist-config", "-n", ns,
+                       "-o", f"jsonpath={{.data.{key}}}"])
+        val = result.stdout.strip()
+        if result.returncode != 0 or val != expected:
+            _fail(f"heist-config[{key}] = '{val}', expected '{expected}'."); passed = False
+        else:
+            _ok(f"heist-config[{key}] = '{val}' ✔")
+    return passed
+
+
+def _verify_mission_4() -> bool:
+    """Secret Vault Key: vault-key secret must exist with correct VAULT_TOKEN."""
+    ns = "cluster-heist"
+    import base64
+    result = _run(["kubectl", "get", "secret", "vault-key", "-n", ns,
+                   "-o", "jsonpath={.data.VAULT_TOKEN}"])
+    if result.returncode != 0 or not result.stdout.strip():
+        _fail("Secret 'vault-key' not found or missing VAULT_TOKEN key."); return False
+
+    try:
+        decoded = base64.b64decode(result.stdout.strip()).decode()
+    except Exception:
+        _fail("Could not decode VAULT_TOKEN from secret."); return False
+
+    if decoded != "golden-yaml-42":
+        _fail(f"VAULT_TOKEN = '{decoded}', expected 'golden-yaml-42'."); return False
+
+    _ok("vault-key secret exists with correct VAULT_TOKEN ✔")
+    return True
+
+
 def _verify_mission_5() -> bool:
     """Sidecar Informant: both sidecar containers must have produced log output."""
     ns = "cluster-heist"
@@ -444,6 +517,10 @@ def _verify_final_boss() -> bool:
 
 # ── verify command ────────────────────────────────────────────────────────────
 _VERIFIERS = {
+    1: ("mission_1", _verify_mission_1),
+    2: ("mission_2", _verify_mission_2),
+    3: ("mission_3", _verify_mission_3),
+    4: ("mission_4", _verify_mission_4),
     5: ("mission_5", _verify_mission_5),
     6: ("mission_6", _verify_mission_6),
     7: ("mission_7", _verify_mission_7),
