@@ -1,0 +1,10 @@
+# Mission 3 — The ConfigMap Combination Lock
+# FLAW: ConfigMap exists but VAULT_MODE and ROOM_NAME are empty/missing
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: heist-config
+  namespace: cluster-heist
+data:
+  VAULT_MODE: ""    # ← BROKEN: must be "training"
+  ROOM_NAME: ""     # ← BROKEN: must be "helm-lab"

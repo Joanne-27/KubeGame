@@ -1,0 +1,17 @@
+# Mission 7 — FIXED: values.yaml after helm upgrade
+# Apply with:
+#   helm upgrade cluster-heist charts/cluster-heist -n cluster-heist \
+#     --set replicaCount=3 \
+#     --set greeting.image.tag=stable \
+#     --set vault.enabled=true
+replicaCount: 3             # ✔ FIXED: was 1
+
+greeting:
+  image:
+    repository: nginx
+    tag: "stable"           # ✔ FIXED: was "broken"
+
+vault:
+  enabled: true             # ✔ FIXED: was false
+  mode: "training"
+  token: "golden-yaml-42"

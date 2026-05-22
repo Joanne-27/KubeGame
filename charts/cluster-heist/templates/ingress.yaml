@@ -1,0 +1,29 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: heist-ingress
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: {{ .Values.ingress.className | quote }}
+  rules:
+    - host: {{ .Values.ingress.host | quote }}
+      http:
+        paths:
+          - path: /greeting
+            pathType: Prefix
+            backend:
+              service:
+                name: greeting-service
+                port:
+                  number: {{ .Values.service.greetingPort }}
+          - path: /message
+            pathType: Prefix
+            backend:
+              service:
+                name: message-service
+                port:
+                  number: {{ .Values.service.messagePort }}
+{{- end }}

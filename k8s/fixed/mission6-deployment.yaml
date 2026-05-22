@@ -1,0 +1,26 @@
+# Mission 6 — FIXED: REDIS_HOST uses cluster DNS service name
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: message-deployment
+  namespace: cluster-heist
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: guard
+      component: message
+  template:
+    metadata:
+      labels:
+        app: guard
+        component: message
+    spec:
+      containers:
+        - name: message
+          image: "nginx:stable"
+          env:
+            - name: REDIS_HOST
+              value: "redis-service"  # ✔ FIXED: "localhost" → "redis-service"
+            - name: REDIS_PORT
+              value: "6379"

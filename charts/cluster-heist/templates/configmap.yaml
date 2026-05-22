@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: heist-config
+  namespace: {{ .Release.Namespace }}
+data:
+  VAULT_MODE: {{ .Values.vault.mode | quote }}
+  ROOM_NAME: {{ .Values.room.name | quote }}

@@ -1,0 +1,14 @@
+# Mission 7 — The Helm Upgrade Gambit
+# FLAW: replicaCount=1, image.tag="broken", vault.enabled=false
+# This is the relevant excerpt from charts/cluster-heist/values.yaml (default/broken state)
+replicaCount: 1             # ← BROKEN: must be 3
+
+greeting:
+  image:
+    repository: nginx
+    tag: "broken"           # ← BROKEN: must be "stable"
+
+vault:
+  enabled: false            # ← BROKEN: must be true
+  mode: "training"
+  token: "golden-yaml-42"

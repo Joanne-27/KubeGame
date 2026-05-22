@@ -1,0 +1,14 @@
+# Mission 2 — FIXED: correct selector label
+apiVersion: v1
+kind: Service
+metadata:
+  name: greeting-service
+  namespace: cluster-heist
+spec:
+  type: ClusterIP
+  selector:
+    app: guard          # ✔ FIXED: "gaurd" → "guard"
+    component: greeting
+  ports:
+    - port: 80
+      targetPort: 80

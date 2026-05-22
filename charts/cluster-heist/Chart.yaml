@@ -1,0 +1,13 @@
+apiVersion: v2
+name: cluster-heist
+description: "Cluster Heist: The Helm Job — intentionally misconfigured target application for educational Kubernetes gameplay."
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - education
+  - kubernetes
+  - helm
+  - game
+maintainers:
+  - name: ClusterBank Security Division

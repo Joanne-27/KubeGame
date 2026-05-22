@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: message-deployment
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: guard
+    component: message
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: guard
+      component: message
+  template:
+    metadata:
+      labels:
+        app: guard
+        component: message
+    spec:
+      containers:
+        - name: message
+          image: "{{ .Values.message.image.repository }}:{{ .Values.message.image.tag }}"
+          imagePullPolicy: {{ .Values.message.image.pullPolicy }}
+          ports:
+            - containerPort: 8080
+          env:
+            - name: REDIS_HOST
+              value: {{ .Values.redis.host | quote }}
+            - name: REDIS_PORT
+              value: {{ .Values.redis.port | quote }}
+            - name: VAULT_MODE
+              valueFrom:
+                configMapKeyRef:
+                  name: heist-config
+                  key: VAULT_MODE
+            - name: ROOM_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: heist-config
+                  key: ROOM_NAME
+            - name: VAULT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: vault-key
+                  key: VAULT_TOKEN

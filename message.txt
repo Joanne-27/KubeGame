@@ -1,0 +1,1078 @@
+Yes. Below are two copy-ready files:
+
+1. **A master prompt to give Kiro CLI**
+2. **A `SKILLS.md` file** that tells Kiro exactly how to build the project and what standards to follow
+
+The game is now designed as a **CLI-first Kubernetes/Helm adventure game**, not a web dashboard.
+
+---
+
+# 1. Master prompt for Kiro CLI
+
+Use this as your main Kiro prompt:
+
+```markdown
+You are helping us build a CLI-based educational Kubernetes and Helm game called **Cluster Heist: The Helm Job**.
+
+The game must teach Kubernetes and Helm through real cluster interaction, not simulation. It must run against a real local Kubernetes cluster, preferably Minikube, and require students to use real `kubectl` and `helm` commands to solve missions.
+
+The game should be challenging enough to occupy a class group for 45–50 minutes. It should start simple and become progressively harder. The target learners have already studied Pods, Deployments, Services, Ingress, ConfigMaps, Secrets, logging, sidecars, Helm charts, Helm values, Helm upgrades, and basic service-to-service communication in Kubernetes.
+
+Build a complete project with this structure:
+
+cluster-heist/
+  README.md
+  SKILLS.md
+  cli/
+    package or source code for the CLI game
+  charts/
+    cluster-heist/
+      Chart.yaml
+      values.yaml
+      templates/
+  missions/
+    mission-01-imagepull/
+    mission-02-service-selector/
+    mission-03-configmap/
+    mission-04-secret/
+    mission-05-sidecar-logs/
+    mission-06-service-dns/
+    mission-07-helm-upgrade/
+    final-boss/
+  k8s/
+    broken/
+    fixed/
+  scripts/
+    setup.sh
+    reset.sh
+    validate.sh
+
+The CLI game should be named `cluster-heist`.
+
+The CLI must provide these commands:
+
+cluster-heist start
+cluster-heist status
+cluster-heist mission
+cluster-heist hint
+cluster-heist validate
+cluster-heist reset
+cluster-heist score
+
+The game should have a fun heist theme. The players are a crew breaking into a fictional Kubernetes-powered vault called ClusterBank. Each mission repairs part of the vault infrastructure. The final goal is to unlock the vault by fixing a Helm-deployed microservice system.
+
+The CLI should not solve the tasks for the players. It should give story, objectives, hints, and validation checks. Players must still use real `kubectl` and `helm` commands themselves.
+
+The game missions should be:
+
+Mission 1: The Sleeping Guard Pod
+- Concept: Pods, Deployments, image pull errors.
+- Broken state: Deployment uses wrong image name like `nginxx:latest`.
+- Player must inspect pods and fix image.
+- Validation: Pod is Running.
+
+Mission 2: The Door With the Wrong Label
+- Concept: Services, labels, selectors.
+- Broken state: Service selector does not match Pod label.
+- Player must compare pod labels and service selector.
+- Validation: Service has endpoints.
+
+Mission 3: The ConfigMap Combination Lock
+- Concept: ConfigMaps as environment variables.
+- Broken state: App requires config values but ConfigMap is missing or not wired.
+- Player must create/fix ConfigMap and inject env vars.
+- Validation: Pod logs or endpoint reports config loaded.
+
+Mission 4: The Secret Vault Key
+- Concept: Kubernetes Secrets.
+- Broken state: App requires `VAULT_TOKEN`, but secret is missing.
+- Player must create secret and wire it into deployment.
+- Validation: Secret exists and pod sees env var.
+
+Mission 5: The Sidecar Informant
+- Concept: Logs, multiple containers, sidecars.
+- Broken state: A pod has sidecars tailing log files. Players must use `kubectl logs <pod> <container>` to find clues.
+- Validation: Player fixes discovered config.
+
+Mission 6: The Redis Red Herring
+- Concept: Service DNS.
+- Broken state: App tries to connect to Redis using localhost.
+- Correct state: App should use `redis-service`.
+- Validation: App connects using Kubernetes service DNS.
+
+Mission 7: The Helm Upgrade Gambit
+- Concept: Helm values and upgrades.
+- Broken state: Helm chart values use wrong image tag, replica count, or disabled feature.
+- Player edits values.yaml and runs `helm upgrade`.
+- Validation: Helm release has correct values and pods are running.
+
+Final Boss: The Two-Service Betrayal
+- Concept: Dependent Spring Boot services and Kubernetes DNS.
+- Message service exposes `/message`.
+- Greeting service exposes `/greeting`.
+- Greeting service must call message service using Kubernetes DNS:
+  `http://message-service:8080/message`
+- Broken state: Greeting service uses localhost or wrong service name.
+- Player fixes Helm values/config and upgrades release.
+- Validation: `curl http://cluster-heist.local/greeting` returns final success message.
+
+The CLI should track progress locally in a state file, for example `.cluster-heist-state.json`.
+
+The CLI should include a scoring system:
+- Start with 100 credits.
+- Using a hint subtracts 5 credits.
+- Completing missions adds points.
+- Final score is displayed at the end.
+- Include fun ranks such as:
+  - YAML Survivor
+  - Pod Whisperer
+  - Helm Bender
+  - DNS Diplomat
+  - Cluster Heist Legend
+
+The CLI should print colourful terminal output if possible, but must still work without colour support.
+
+The Helm chart must deploy the game resources needed for the missions. It should include deliberately broken resources where appropriate. It should use values.yaml so the Helm upgrade mission is meaningful.
+
+The project should include:
+- Clear README instructions.
+- Setup script.
+- Reset script.
+- Validation script.
+- Example broken YAML files.
+- Fixed reference YAML files.
+- Helm chart.
+- CLI source code.
+- Comments explaining the educational purpose of each mission.
+
+Keep the implementation achievable for students. Do not over-engineer. Prefer a simple, reliable CLI over a complex system.
+
+Use either Node.js or Python for the CLI, whichever is simpler to implement robustly. The CLI may call shell commands like `kubectl` and `helm` and parse their output.
+
+Important constraints:
+- The game must use a real Kubernetes cluster.
+- The game must use Helm.
+- The game must last roughly 45–50 minutes.
+- It must start easy and become progressively harder.
+- It must teach Kubernetes and Helm through hands-on debugging.
+- It must be fun, themed, and interactive from the terminal.
+- It must not be just a quiz.
+```
+
+---
+
+# 2. `SKILLS.md`
+
+Create a file called:
+
+```bash
+SKILLS.md
+```
+
+Put this inside it:
+
+````markdown
+# SKILLS.md — Cluster Heist: The Helm Job
+
+## Project Identity
+
+Build a CLI-based Kubernetes and Helm learning game called:
+
+# Cluster Heist: The Helm Job
+
+The game is a terminal-based educational adventure where players repair a broken Kubernetes cluster as part of a fictional heist against a Kubernetes-powered vault called ClusterBank.
+
+The game must be practical, funny, and hands-on. It must teach real Kubernetes and Helm skills by requiring players to interact with an actual Kubernetes cluster using `kubectl` and `helm`.
+
+This is not a quiz game. It is a real cluster debugging game.
+
+---
+
+## Core Learning Goals
+
+The game must teach and reinforce:
+
+1. Pods
+2. Deployments
+3. ReplicaSets
+4. Services
+5. Labels and selectors
+6. Ingress
+7. ConfigMaps
+8. Secrets
+9. Logs
+10. Multi-container Pods
+11. Sidecars
+12. Kubernetes DNS
+13. Service-to-service communication
+14. Helm chart structure
+15. Helm values
+16. Helm install
+17. Helm upgrade
+18. Helm release history
+19. Debugging using `kubectl describe`, `kubectl logs`, and `kubectl get`
+20. Real deployment troubleshooting workflow
+
+---
+
+## Game Requirements
+
+The game must:
+
+- Run from the command line.
+- Use a real Kubernetes cluster, preferably Minikube.
+- Use Helm charts.
+- Be playable in 45–50 minutes.
+- Start with simple tasks and become progressively harder.
+- Be suitable for students who have completed basic Kubernetes and Helm exercises.
+- Provide story, hints, progress tracking, validation, and scoring.
+- Avoid giving direct solutions unless the user explicitly asks for reveal/solution mode.
+- Encourage players to use real Kubernetes commands.
+
+---
+
+## CLI Requirements
+
+The CLI command should be called:
+
+```bash
+cluster-heist
+````
+
+It should support the following commands:
+
+```bash
+cluster-heist start
+cluster-heist status
+cluster-heist mission
+cluster-heist hint
+cluster-heist validate
+cluster-heist reset
+cluster-heist score
+```
+
+Optional extra commands:
+
+```bash
+cluster-heist intro
+cluster-heist leaderboard
+cluster-heist reveal
+cluster-heist doctor
+```
+
+---
+
+## Command Behaviour
+
+### `cluster-heist start`
+
+Starts the game.
+
+It should:
+
+* Print the story intro.
+* Check that `kubectl` is installed.
+* Check that `helm` is installed.
+* Check that a Kubernetes cluster is reachable.
+* Check that the current namespace is usable.
+* Install or prepare the initial Helm chart if appropriate.
+* Create local game state in `.cluster-heist-state.json`.
+* Show Mission 1.
+
+It should not silently fix everything for the player.
+
+---
+
+### `cluster-heist status`
+
+Shows:
+
+* Current mission.
+* Completed missions.
+* Score.
+* Remaining hints.
+* Current cluster health summary.
+
+Example output:
+
+```text
+CLUSTER HEIST STATUS
+
+Current Mission: Mission 3 — The ConfigMap Combination Lock
+Score: 85 credits
+Hints used: 2
+Vault Status: Locked
+
+Mission Progress:
+[✓] Mission 1 — Sleeping Guard Pod
+[✓] Mission 2 — Wrong Label Door
+[ ] Mission 3 — ConfigMap Combination Lock
+[ ] Mission 4 — Secret Vault Key
+[ ] Mission 5 — Sidecar Informant
+[ ] Mission 6 — Redis Red Herring
+[ ] Mission 7 — Helm Upgrade Gambit
+[ ] Final Boss — Two-Service Betrayal
+```
+
+---
+
+### `cluster-heist mission`
+
+Prints the current mission story, objective, allowed commands, and validation condition.
+
+It should be fun but technically useful.
+
+Do not provide the full solution by default.
+
+---
+
+### `cluster-heist hint`
+
+Shows a progressive hint for the current mission.
+
+Each mission should have at least 3 hints:
+
+1. Gentle conceptual hint
+2. Command direction hint
+3. Nearly-solution hint
+
+Each hint should reduce the score by 5 credits.
+
+Example:
+
+```text
+Hint 1:
+Kubernetes Services do not magically know which Pods to send traffic to.
+They use labels and selectors. The door is looking for the wrong guard.
+```
+
+---
+
+### `cluster-heist validate`
+
+Checks whether the current mission is complete.
+
+It should use real cluster checks, such as:
+
+```bash
+kubectl get pods
+kubectl get deployment
+kubectl get svc
+kubectl get endpoints
+kubectl get configmap
+kubectl get secret
+helm list
+helm get values
+curl
+```
+
+If validation passes:
+
+* Mark mission complete.
+* Add score.
+* Print success message.
+* Unlock next mission.
+
+If validation fails:
+
+* Print a useful failure reason.
+* Do not reveal the full solution unless reveal mode is used.
+
+---
+
+### `cluster-heist reset`
+
+Resets the game.
+
+It should:
+
+* Delete game resources.
+* Uninstall Helm releases created by the game.
+* Remove temporary files if safe.
+* Recreate initial broken state.
+
+It should ask for confirmation before destructive actions.
+
+---
+
+### `cluster-heist score`
+
+Displays score, achievements, and rank.
+
+Ranks:
+
+* 90–100: Cluster Heist Legend
+* 75–89: Helm Bender
+* 60–74: DNS Diplomat
+* 40–59: YAML Survivor
+* Below 40: CrashLoop Apprentice
+
+Achievements:
+
+* Pod Whisperer
+* Selector Detective
+* Secret Keeper
+* Log Goblin
+* Helm Bender
+* DNS Diplomat
+* YAML Survivor
+
+---
+
+## Technical Stack
+
+Prefer a simple implementation.
+
+Acceptable CLI choices:
+
+### Option A: Node.js
+
+Use:
+
+* Node.js
+* Commander.js for CLI commands
+* Chalk for colour
+* execa or child_process for shell commands
+* fs for local state
+
+### Option B: Python
+
+Use:
+
+* Python 3
+* argparse or typer
+* rich for terminal output
+* subprocess for shell commands
+* json for local state
+
+Pick the option that is fastest and most robust.
+
+The CLI must be readable and easy for students to understand.
+
+---
+
+## Project Structure
+
+Use this structure:
+
+```text
+cluster-heist/
+  README.md
+  SKILLS.md
+
+  cli/
+    src/
+    package.json or pyproject.toml
+    README.md
+
+  charts/
+    cluster-heist/
+      Chart.yaml
+      values.yaml
+      templates/
+        deployment-message.yaml
+        service-message.yaml
+        deployment-greeting.yaml
+        service-greeting.yaml
+        ingress.yaml
+        configmap.yaml
+        secret.yaml
+        redis.yaml
+        sidecar-logger.yaml
+
+  missions/
+    mission-01-imagepull/
+      README.md
+      broken.yaml
+      fixed.yaml
+
+    mission-02-service-selector/
+      README.md
+      broken.yaml
+      fixed.yaml
+
+    mission-03-configmap/
+      README.md
+      broken.yaml
+      fixed.yaml
+
+    mission-04-secret/
+      README.md
+      broken.yaml
+      fixed.yaml
+
+    mission-05-sidecar-logs/
+      README.md
+      broken.yaml
+      fixed.yaml
+
+    mission-06-service-dns/
+      README.md
+      broken.yaml
+      fixed.yaml
+
+    mission-07-helm-upgrade/
+      README.md
+      broken-values.yaml
+      fixed-values.yaml
+
+    final-boss/
+      README.md
+      broken-values.yaml
+      fixed-values.yaml
+
+  k8s/
+    broken/
+    fixed/
+
+  scripts/
+    setup.sh
+    reset.sh
+    validate.sh
+```
+
+---
+
+## Game Theme
+
+Use a heist theme.
+
+Terminology mapping:
+
+| Kubernetes Concept | Game Theme         |
+| ------------------ | ------------------ |
+| Pod                | Guard              |
+| Deployment         | Crew/Squad         |
+| Service            | Doorway            |
+| Ingress            | Front Gate         |
+| ConfigMap          | Combination Lock   |
+| Secret             | Vault Key          |
+| Logs               | Informant Messages |
+| Sidecar            | Informant          |
+| Helm Chart         | Blueprint          |
+| Helm Upgrade       | Plan Revision      |
+| Redis              | Memory Vault       |
+| DNS                | Secret Tunnel      |
+| HPA/Scaling        | Reinforcements     |
+
+Tone should be fun, sharp, and slightly sarcastic, but not childish.
+
+Example message:
+
+```text
+The guard pod is down. Apparently someone deployed `nginxx`.
+A bold strategy. A terrible one, but bold.
+```
+
+---
+
+## Missions
+
+### Mission 1 — The Sleeping Guard Pod
+
+Concepts:
+
+* Pod status
+* Deployment
+* ImagePullBackOff
+* `kubectl describe`
+
+Broken state:
+
+* Deployment image is wrong, for example `nginxx:latest`.
+
+Expected player actions:
+
+* Run `kubectl get pods`.
+* Run `kubectl describe pod`.
+* Identify bad image.
+* Fix deployment image.
+
+Validation:
+
+* Deployment exists.
+* Pod is Running.
+* Container image is corrected.
+
+Success message:
+
+```text
+Guard online. The first hallway is clear.
+Access code unlocked: POD-ALIVE
+```
+
+---
+
+### Mission 2 — The Door With the Wrong Label
+
+Concepts:
+
+* Services
+* Selectors
+* Labels
+* Endpoints
+
+Broken state:
+
+* Pod label is `app: guard`.
+* Service selector is `app: gaurd`.
+
+Expected player actions:
+
+* Run `kubectl get pods --show-labels`.
+* Run `kubectl describe svc`.
+* Fix service selector.
+
+Validation:
+
+* Service has at least one endpoint.
+* Service routes to the correct pod.
+
+Success message:
+
+```text
+The door found its guard. Selector repaired.
+Access code unlocked: SELECTOR-SNIPER
+```
+
+---
+
+### Mission 3 — The ConfigMap Combination Lock
+
+Concepts:
+
+* ConfigMaps
+* Environment variables
+* Deployment envFrom
+
+Broken state:
+
+* App requires `VAULT_MODE` and `ROOM_NAME`.
+* ConfigMap is missing or not mounted.
+
+Expected player actions:
+
+* Create/fix ConfigMap.
+* Inject it into the deployment.
+
+Required values:
+
+```yaml
+VAULT_MODE: training
+ROOM_NAME: helm-lab
+```
+
+Validation:
+
+* ConfigMap exists.
+* Pod has environment variables.
+* App logs or endpoint confirms configuration loaded.
+
+Success message:
+
+```text
+Combination accepted. The vault is now mildly impressed.
+Access code unlocked: CONFIG-LOADED
+```
+
+---
+
+### Mission 4 — The Secret Vault Key
+
+Concepts:
+
+* Secrets
+* secretKeyRef
+* Avoiding hardcoded sensitive data
+
+Broken state:
+
+* App expects `VAULT_TOKEN`.
+* Secret is missing or wrong.
+
+Required secret:
+
+```text
+VAULT_TOKEN=golden-yaml-42
+```
+
+Expected player actions:
+
+```bash
+kubectl create secret generic vault-secret --from-literal=VAULT_TOKEN=golden-yaml-42
+```
+
+Then wire it into the deployment.
+
+Validation:
+
+* Secret exists.
+* Deployment references secret.
+* Pod can access `VAULT_TOKEN`.
+
+Success message:
+
+```text
+Vault token accepted. Nobody committed it to Git. Character development.
+Access code unlocked: SECRET-SAUCE
+```
+
+---
+
+### Mission 5 — The Sidecar Informant
+
+Concepts:
+
+* Multi-container pods
+* Sidecars
+* `kubectl logs <pod> <container>`
+
+Broken state:
+
+* A pod has three containers:
+
+  * logger
+  * clue-log-1
+  * clue-log-2
+* The main logs are not enough.
+* Each sidecar gives one clue.
+
+Expected player actions:
+
+```bash
+kubectl logs <pod> clue-log-1
+kubectl logs <pod> clue-log-2
+```
+
+Clues:
+
+```text
+REDIS_HOST must be redis-service
+REDIS_PORT must be 6379
+```
+
+Validation:
+
+* Player uses/fixes Redis config.
+
+Success message:
+
+```text
+The informant talked. Sidecars are not just decorative furniture.
+Access code unlocked: LOG-WHISPERER
+```
+
+---
+
+### Mission 6 — The Redis Red Herring
+
+Concepts:
+
+* Service DNS
+* Redis deployment
+* Internal service discovery
+
+Broken state:
+
+* App uses `localhost` for Redis.
+* Correct host is `redis-service`.
+
+Expected player actions:
+
+* Deploy Redis.
+* Expose Redis with a Service.
+* Update app configuration to use service DNS.
+
+Validation:
+
+* Redis pod running.
+* Redis service exists.
+* App config uses `redis-service`.
+* App can connect.
+
+Success message:
+
+```text
+Redis connected. The memory vault remembers you now.
+Access code unlocked: DNS-IS-MAGIC
+```
+
+---
+
+### Mission 7 — The Helm Upgrade Gambit
+
+Concepts:
+
+* Helm values
+* Helm upgrade
+* Release history
+
+Broken state in `values.yaml`:
+
+```yaml
+replicaCount: 1
+
+image:
+  tag: broken
+
+vault:
+  enabled: false
+```
+
+Required state:
+
+```yaml
+replicaCount: 3
+
+image:
+  tag: stable
+
+vault:
+  enabled: true
+```
+
+Expected player actions:
+
+```bash
+helm upgrade cluster-heist ./charts/cluster-heist
+helm history cluster-heist
+kubectl get pods
+```
+
+Validation:
+
+* Helm release exists.
+* Correct values are applied.
+* 3 replicas running.
+* Vault feature enabled.
+
+Success message:
+
+```text
+Blueprint upgraded. Helm accepts your offering.
+Access code unlocked: HELM-HANDLED
+```
+
+---
+
+### Final Boss — The Two-Service Betrayal
+
+Concepts:
+
+* Two dependent Spring Boot services
+* Kubernetes DNS
+* Ingress
+* Helm upgrade
+
+Services:
+
+1. Message service:
+
+   * Endpoint: `/message`
+   * Kubernetes Service name: `message-service`
+
+2. Greeting service:
+
+   * Endpoint: `/greeting`
+   * Calls message service internally
+
+Broken state:
+
+```text
+MESSAGE_SERVICE_URL=http://localhost:8080/message
+```
+
+Correct state:
+
+```text
+MESSAGE_SERVICE_URL=http://message-service:8080/message
+```
+
+Expected player actions:
+
+* Update Helm values.
+* Upgrade release.
+* Test endpoint through ingress.
+
+Final validation:
+
+```bash
+curl http://cluster-heist.local/greeting
+```
+
+Expected output:
+
+```text
+VAULT OPENED
+```
+
+Success message:
+
+```text
+VAULT OPENED.
+You recovered the lost Helm release.
+The cluster lives to deploy another day.
+Please do not deploy on Friday.
+```
+
+---
+
+## Helm Requirements
+
+The project must include a real Helm chart at:
+
+```text
+charts/cluster-heist
+```
+
+The chart must include:
+
+* Deployments
+* Services
+* Ingress
+* ConfigMap
+* Secret template if appropriate
+* Redis deployment or dependency if appropriate
+* Values-driven configuration
+* Broken default values for gameplay
+* Fixed example values
+
+The chart must support:
+
+```bash
+helm install cluster-heist ./charts/cluster-heist
+helm upgrade cluster-heist ./charts/cluster-heist
+helm delete cluster-heist
+```
+
+The chart should use values like:
+
+```yaml
+replicaCount: 1
+
+image:
+  repository: demo/cluster-heist
+  tag: broken
+  pullPolicy: Never
+
+vault:
+  enabled: false
+
+greeting:
+  messageServiceUrl: "http://localhost:8080/message"
+
+redis:
+  host: "localhost"
+  port: 6379
+
+ingress:
+  enabled: true
+  host: cluster-heist.local
+```
+
+---
+
+## Validation Rules
+
+The CLI validation should rely on actual cluster state.
+
+Use commands like:
+
+```bash
+kubectl get pods
+kubectl get deployments
+kubectl get svc
+kubectl get endpoints
+kubectl get configmap
+kubectl get secret
+kubectl logs
+helm list
+helm get values
+curl
+```
+
+Do not fake success.
+
+If a validation command fails, report a helpful reason.
+
+Example:
+
+```text
+Mission failed validation:
+The service `guard-service` exists, but it has no endpoints.
+This usually means the Service selector does not match any Pod labels.
+```
+
+---
+
+## README Requirements
+
+The README must explain:
+
+1. What the game is.
+2. Required tools.
+3. How to start Minikube.
+4. How to install the game.
+5. How to play.
+6. How scoring works.
+7. How hints work.
+8. How to reset.
+9. How the game maps to Kubernetes learning outcomes.
+
+Example quickstart:
+
+```bash
+minikube start
+helm install cluster-heist ./charts/cluster-heist
+cluster-heist start
+cluster-heist mission
+```
+
+---
+
+## Quality Requirements
+
+The project should be:
+
+* Simple enough for students to understand.
+* Reliable on Minikube.
+* Clear in folder structure.
+* Well-commented.
+* Fun but technically accurate.
+* Free of unnecessary complexity.
+* Easy to reset.
+* Possible to complete in 45–50 minutes.
+
+Avoid:
+
+* Cloud-only dependencies.
+* Complex databases unless needed.
+* Overcomplicated authentication.
+* Long frontend setup.
+* A web dashboard as the main game interface.
+* Hiding too much from students.
+* Turning the game into a quiz.
+
+---
+
+## Output Standard
+
+When generating files, include:
+
+* Complete source files.
+* Complete YAML files.
+* Complete Helm chart files.
+* Runnable commands.
+* Clear setup instructions.
+* Comments where useful.
+
+Prefer working code over theoretical descriptions.
+
+The final project should be something a student group can present, run live, and explain confidently.
+
+```
+
+---
+
+One important framing point for your group: make the CLI the **game master**, not the system doing the Kubernetes work for the player. The CLI should say, “The vault door has no endpoints,” then the players must figure out `kubectl get pods --show-labels` and fix it themselves. That is what makes it a teaching game instead of a disguised automation script.
+```

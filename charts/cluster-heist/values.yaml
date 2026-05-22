@@ -1,0 +1,49 @@
+# ── Replica count (Mission 7: must be changed to 3) ──────────────────────────
+replicaCount: 1
+
+# ── Greeting (frontend) service ───────────────────────────────────────────────
+greeting:
+  image:
+    repository: nginxx          # Mission 1 flaw: typo, should be nginx
+    tag: "broken"               # Mission 7 flaw: should be "stable"
+    pullPolicy: IfNotPresent
+  # Final Boss flaw: must be changed to http://message-service:8080/message
+  messageServiceUrl: "http://localhost:8080/message"
+
+# ── Message (backend) service ─────────────────────────────────────────────────
+message:
+  image:
+    repository: nginx
+    tag: "stable"
+    pullPolicy: IfNotPresent
+
+# ── Redis ─────────────────────────────────────────────────────────────────────
+redis:
+  image:
+    repository: redis
+    tag: "7.2-alpine"
+  # Mission 6 flaw: must be changed to "redis-service"
+  host: "localhost"
+  port: 6379
+
+# ── Vault / ConfigMap settings ────────────────────────────────────────────────
+vault:
+  enabled: false          # Mission 7 flaw: must be true
+  mode: "training"        # Mission 3: VAULT_MODE value
+  token: "golden-yaml-42" # Mission 4: VAULT_TOKEN value
+
+# ── Room config ───────────────────────────────────────────────────────────────
+room:
+  name: "helm-lab"        # Mission 3: ROOM_NAME value
+
+# ── Service ───────────────────────────────────────────────────────────────────
+service:
+  type: ClusterIP
+  greetingPort: 80
+  messagePort: 8080
+
+# ── Ingress ───────────────────────────────────────────────────────────────────
+ingress:
+  enabled: true
+  host: "cluster-heist.local"
+  className: "nginx"

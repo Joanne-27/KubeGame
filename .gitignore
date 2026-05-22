@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Game state (player-local, not committed)
+cli/.cluster-heist-state.json
+
+# Helm packaged charts
+*.tgz
+
+# OS
+.DS_Store
+Thumbs.db

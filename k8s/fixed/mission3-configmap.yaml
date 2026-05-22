@@ -1,0 +1,9 @@
+# Mission 3 — FIXED: ConfigMap populated with required values
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: heist-config
+  namespace: cluster-heist
+data:
+  VAULT_MODE: "training"    # ✔ FIXED: was empty
+  ROOM_NAME: "helm-lab"     # ✔ FIXED: was empty

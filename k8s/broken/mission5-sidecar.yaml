@@ -1,0 +1,23 @@
+# Mission 5 — The Sidecar Informant
+# STATE: Pod is running correctly. The "flaw" is that the player has not yet
+# read the individual container logs to extract the clue parameters.
+# Player must run:
+#   kubectl logs sidecar-informant -c clue-log-1 -n cluster-heist
+#   kubectl logs sidecar-informant -c clue-log-2 -n cluster-heist
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sidecar-informant
+  namespace: cluster-heist
+  labels:
+    app: guard
+    component: informant
+spec:
+  restartPolicy: Always
+  containers:
+    - name: clue-log-1
+      image: busybox:1.36
+      command: ["sh", "-c", "echo 'CLUE_PARAM_A=cluster-key-7749' && sleep 3600"]
+    - name: clue-log-2
+      image: busybox:1.36
+      command: ["sh", "-c", "echo 'CLUE_PARAM_B=vault-sector-alpha' && sleep 3600"]

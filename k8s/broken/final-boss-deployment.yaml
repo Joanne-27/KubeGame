@@ -1,0 +1,25 @@
+# Final Boss — The Two-Service Betrayal
+# FLAW: MESSAGE_SERVICE_URL uses "localhost" instead of the message-service DNS name
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: greeting-deployment
+  namespace: cluster-heist
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: guard
+      component: greeting
+  template:
+    metadata:
+      labels:
+        app: guard
+        component: greeting
+    spec:
+      containers:
+        - name: greeting
+          image: "nginx:stable"
+          env:
+            - name: MESSAGE_SERVICE_URL
+              value: "http://localhost:8080/message"   # ← BROKEN: must be "http://message-service:8080/message"

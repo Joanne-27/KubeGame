@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: greeting-deployment
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: guard
+    component: greeting
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: guard
+      component: greeting
+  template:
+    metadata:
+      labels:
+        app: guard
+        component: greeting
+    spec:
+      containers:
+        - name: greeting
+          image: "{{ .Values.greeting.image.repository }}:{{ .Values.greeting.image.tag }}"
+          imagePullPolicy: {{ .Values.greeting.image.pullPolicy }}
+          ports:
+            - containerPort: 80
+          env:
+            - name: MESSAGE_SERVICE_URL
+              value: {{ .Values.greeting.messageServiceUrl | quote }}
+            - name: VAULT_MODE
+              valueFrom:
+                configMapKeyRef:
+                  name: heist-config
+                  key: VAULT_MODE
+            - name: ROOM_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: heist-config
+                  key: ROOM_NAME
+            - name: VAULT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: vault-key
+                  key: VAULT_TOKEN

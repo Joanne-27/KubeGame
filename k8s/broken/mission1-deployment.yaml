@@ -1,0 +1,25 @@
+# Mission 1 — The Sleeping Guard Pod
+# FLAW: image repository is "nginxx" (typo) — causes ImagePullBackOff
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: greeting-deployment
+  namespace: cluster-heist
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: guard
+      component: greeting
+  template:
+    metadata:
+      labels:
+        app: guard
+        component: greeting
+    spec:
+      containers:
+        - name: greeting
+          image: "nginxx:broken"   # ← BROKEN: typo in repository name
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
