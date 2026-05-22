@@ -182,6 +182,33 @@ def start():
         sys.exit(1)
     console.print("[bold green][OK][/bold green] Cluster is live.\n")
 
+    # Alias tip
+    script_path = Path(__file__).resolve()
+    console.print(Panel.fit(
+        f"[bold cyan]Save yourself some typing -- add this alias:[/bold cyan]\n\n"
+        f"[bold yellow]echo \"alias cluster-heist='python3 {script_path}'\" >> ~/.bashrc && source ~/.bashrc[/bold yellow]\n\n"
+        f"[dim]Then use [bold]cluster-heist <command>[/bold] instead of the full python3 path.[/dim]",
+        title="[bold cyan]// QUICK SETUP //[/bold cyan]",
+        border_style="cyan",
+    ))
+
+    # How to play
+    console.print(Panel(
+        "[bold white]HOW TO PLAY[/bold white]\n\n"
+        "[green]1.[/green] Read the mission objective below\n"
+        "[green]2.[/green] Use [bold]kubectl[/bold] and [bold]helm[/bold] commands to find and fix the misconfiguration\n"
+        "[green]3.[/green] Run [bold cyan]cluster-heist verify[/bold cyan] to check your fix\n"
+        "[green]4.[/green] Pass verification to unlock the next mission\n\n"
+        "[bold white]COMMANDS[/bold white]\n\n"
+        "  [bold cyan]cluster-heist status[/bold cyan]   -- live dashboard: mission, credits, checklist\n"
+        "  [bold cyan]cluster-heist hint[/bold cyan]     -- reveal next hint (-5 credits each, max 3)\n"
+        "  [bold cyan]cluster-heist verify[/bold cyan]   -- check your fix against the live cluster\n"
+        "  [bold cyan]cluster-heist score[/bold cyan]    -- final rank and achievements\n\n"
+        "[dim]Starting credits: 100  |  Ranks: Legend / Helm Bender / DNS Diplomat / YAML Survivor / CrashLoop Apprentice[/dim]",
+        title="[bold green]// BRIEFING //[/bold green]",
+        border_style="green",
+    ))
+
     _print_mission(1)
 
 @cli.command()
