@@ -60,7 +60,7 @@ MISSIONS = {
         "hints": [
             "[cyan]Run [bold]kubectl get pods -n cluster-heist[/bold] and look for a pod stuck in [red]ImagePullBackOff[/red].[/cyan]",
             "[cyan]Use [bold]kubectl describe pod <pod-name> -n cluster-heist[/bold] and read the Events section carefully.[/cyan]",
-            "[cyan]The image name contains a typo: [bold]nginxx[/bold] → fix it to [bold]nginx[/bold] using [bold]kubectl set image[/bold] or edit the deployment.[/cyan]",
+            "[cyan]Fix the typo: [bold]kubectl set image deployment/greeting-deployment greeting=nginx:stable -n cluster-heist[/bold][/cyan]",
         ],
     },
     2: {
@@ -68,9 +68,9 @@ MISSIONS = {
         "objective": "The service doorway points nowhere. Fix the selector so traffic flows.",
         "skill": "Services, Label Matching & Endpoints",
         "hints": [
-            "[cyan]Run [bold]kubectl get endpoints -n cluster-heist[/bold] — if the endpoint list is empty, the selector is broken.[/cyan]",
-            "[cyan]Compare [bold]kubectl get svc <svc> -n cluster-heist -o yaml[/bold] selector vs [bold]kubectl get pods --show-labels[/bold].[/cyan]",
-            "[cyan]The selector says [bold]app: gaurd[/bold] — fix the typo to [bold]app: guard[/bold] with [bold]kubectl edit svc[/bold].[/cyan]",
+            "[cyan]Run [bold]kubectl get endpoints -n cluster-heist[/bold] — if the list is empty, the selector is broken.[/cyan]",
+            "[cyan]Compare selectors: [bold]kubectl get svc greeting-service -n cluster-heist -o yaml[/bold] vs [bold]kubectl get pods --show-labels -n cluster-heist[/bold][/cyan]",
+            "[cyan]Fix the typo: [bold]kubectl edit svc greeting-service -n cluster-heist[/bold] — change [bold]app: gaurd[/bold] to [bold]app: guard[/bold][/cyan]",
         ],
     },
     3: {
@@ -78,9 +78,9 @@ MISSIONS = {
         "objective": "Inject VAULT_MODE and ROOM_NAME into the deployment via a ConfigMap.",
         "skill": "ConfigMaps & Environment Variables",
         "hints": [
-            "[cyan]Check existing ConfigMaps: [bold]kubectl get configmap -n cluster-heist[/bold].[/cyan]",
-            "[cyan]Create or edit a ConfigMap with keys [bold]VAULT_MODE=training[/bold] and [bold]ROOM_NAME=helm-lab[/bold].[/cyan]",
-            "[cyan]Reference the ConfigMap in the deployment under [bold]envFrom.configMapRef[/bold] and rollout restart.[/cyan]",
+            "[cyan]Check existing ConfigMaps: [bold]kubectl get configmap -n cluster-heist[/bold][/cyan]",
+            "[cyan]Edit the ConfigMap: [bold]kubectl edit configmap heist-config -n cluster-heist[/bold] — set [bold]VAULT_MODE: training[/bold] and [bold]ROOM_NAME: helm-lab[/bold][/cyan]",
+            "[cyan]Restart to pick up changes: [bold]kubectl rollout restart deployment/greeting-deployment -n cluster-heist[/bold][/cyan]",
         ],
     },
     4: {
@@ -88,9 +88,9 @@ MISSIONS = {
         "objective": "Inject VAULT_TOKEN securely using a Kubernetes Secret.",
         "skill": "Kubernetes Secrets",
         "hints": [
-            "[cyan]Run [bold]kubectl get secrets -n cluster-heist[/bold] to see what exists.[/cyan]",
-            "[cyan]Create a secret: [bold]kubectl create secret generic vault-key --from-literal=VAULT_TOKEN=golden-yaml-42 -n cluster-heist[/bold].[/cyan]",
-            "[cyan]Mount it as an env var in the deployment using [bold]secretKeyRef[/bold], then restart the pod.[/cyan]",
+            "[cyan]Check existing secrets: [bold]kubectl get secrets -n cluster-heist[/bold][/cyan]",
+            "[cyan]Create the secret: [bold]kubectl create secret generic vault-key --from-literal=VAULT_TOKEN=golden-yaml-42 -n cluster-heist[/bold][/cyan]",
+            "[cyan]Restart the deployment: [bold]kubectl rollout restart deployment/greeting-deployment -n cluster-heist[/bold][/cyan]",
         ],
     },
     5: {
@@ -98,9 +98,9 @@ MISSIONS = {
         "objective": "Extract hidden clue parameters from two sidecar container logs.",
         "skill": "Multi-container Pods & Log Streaming",
         "hints": [
-            "[cyan]List pods: [bold]kubectl get pods -n cluster-heist[/bold] and find the multi-container pod.[/cyan]",
-            "[cyan]Stream logs from the first sidecar: [bold]kubectl logs <pod> -c clue-log-1 -n cluster-heist[/bold].[/cyan]",
-            "[cyan]Do the same for [bold]-c clue-log-2[/bold] and combine both clue values as instructed.[/cyan]",
+            "[cyan]Find the multi-container pod: [bold]kubectl get pods -n cluster-heist[/bold] — look for sidecar-informant.[/cyan]",
+            "[cyan]Read the first sidecar: [bold]kubectl logs sidecar-informant -c clue-log-1 -n cluster-heist[/bold][/cyan]",
+            "[cyan]Read the second sidecar: [bold]kubectl logs sidecar-informant -c clue-log-2 -n cluster-heist[/bold][/cyan]",
         ],
     },
     6: {
@@ -108,9 +108,9 @@ MISSIONS = {
         "objective": "Replace hardcoded localhost DB references with the redis-service DNS name.",
         "skill": "Internal Service Discovery & Cluster DNS",
         "hints": [
-            "[cyan]Inspect the deployment env vars: [bold]kubectl describe deployment -n cluster-heist[/bold].[/cyan]",
-            "[cyan]Find any env var pointing to [bold]localhost[/bold] for Redis.[/cyan]",
-            "[cyan]Update it to [bold]redis-service[/bold] — Kubernetes DNS resolves service names within the same namespace.[/cyan]",
+            "[cyan]Inspect env vars: [bold]kubectl describe deployment message-deployment -n cluster-heist[/bold][/cyan]",
+            "[cyan]Find the [bold]REDIS_HOST[/bold] env var pointing to [bold]localhost[/bold].[/cyan]",
+            "[cyan]Fix it: [bold]kubectl set env deployment/message-deployment REDIS_HOST=redis-service -n cluster-heist[/bold][/cyan]",
         ],
     },
     7: {
@@ -118,19 +118,19 @@ MISSIONS = {
         "objective": "Edit values.yaml to scale replicas to 3, swap image tags, and enable vault settings.",
         "skill": "Helm Chart Architecture & helm upgrade",
         "hints": [
-            "[cyan]Inspect the chart: [bold]helm show values charts/cluster-heist[/bold] or open [bold]charts/cluster-heist/values.yaml[/bold].[/cyan]",
-            "[cyan]Set [bold]replicaCount: 3[/bold], update the image tag to the stable version, and set vault flags to true.[/cyan]",
-            "[cyan]Apply with: [bold]helm upgrade cluster-heist charts/cluster-heist -n cluster-heist -f charts/cluster-heist/values.yaml[/bold].[/cyan]",
+            "[cyan]Inspect current values: [bold]helm get values cluster-heist -n cluster-heist[/bold][/cyan]",
+            "[cyan]Set [bold]replicaCount: 3[/bold], [bold]greeting.image.tag: stable[/bold], and [bold]vault.enabled: true[/bold] in [bold]charts/cluster-heist/values.yaml[/bold][/cyan]",
+            "[cyan]Apply: [bold]helm upgrade cluster-heist charts/cluster-heist -n cluster-heist -f charts/cluster-heist/values.yaml[/bold][/cyan]",
         ],
     },
     8: {
         "name": "Final Boss: The Two-Service Betrayal",
-        "objective": "Fix inter-service Spring Boot env vars so DNS routing resolves through the Ingress.",
+        "objective": "Fix inter-service env vars so DNS routing resolves through the Ingress.",
         "skill": "Ingress Rules & Cross-Service DNS",
         "hints": [
-            "[cyan]Check both service deployments for hardcoded IPs or wrong service names in env vars.[/cyan]",
-            "[cyan]Use [bold]kubectl get ingress -n cluster-heist[/bold] to confirm Ingress hostnames.[/cyan]",
-            "[cyan]Update each service's env var to reference the other by its Kubernetes service name, not an IP.[/cyan]",
+            "[cyan]Check the Ingress: [bold]kubectl get ingress -n cluster-heist[/bold] and [bold]kubectl describe ingress heist-ingress -n cluster-heist[/bold][/cyan]",
+            "[cyan]Inspect the greeting deployment env vars: [bold]kubectl describe deployment greeting-deployment -n cluster-heist[/bold][/cyan]",
+            "[cyan]Fix it: [bold]kubectl set env deployment/greeting-deployment MESSAGE_SERVICE_URL=http://message-service:8080/message -n cluster-heist[/bold][/cyan]",
         ],
     },
 }
