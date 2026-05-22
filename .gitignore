@@ -8,8 +8,6 @@ venv/
 # Game state (player-local, not committed)
 cli/.cluster-heist-state.json
 
-# Helm packaged charts
-*.tgz
 
 # OS
 .DS_Store
