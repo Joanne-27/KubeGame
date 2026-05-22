@@ -55,7 +55,14 @@ def save_state(state: dict) -> None:
 MISSIONS = {
     1: {
         "name": "The Sleeping Guard Pod",
-        "objective": "A guard pod refuses to wake up. Diagnose the broken image and patch it.",
+        "objective": (
+            "A guard pod refuses to wake up. Diagnose the broken image and patch it.\n\n"
+            "Someone fat-fingered the image name in the deployment. "
+            "Start by listing pods to find the broken one, then describe it to read the error.\n\n"
+            "[bold white]Where to look:[/bold white] the [bold]greeting-deployment[/bold] in namespace [bold]cluster-heist[/bold].\n"
+            "[bold white]What to fix:[/bold white] the container image name has a typo -- it should be [bold]nginx[/bold], not [bold]nginxx[/bold].\n"
+            "[bold white]How to fix:[/bold white] use [bold]kubectl set image[/bold] or edit the deployment directly."
+        ),
         "skill": "Pod Statuses & Diagnostics (ImagePullBackOff)",
         "hints": [
             "[cyan]Run [bold]kubectl get pods -n cluster-heist[/bold] and look for a pod stuck in [red]ImagePullBackOff[/red].[/cyan]",
@@ -65,7 +72,14 @@ MISSIONS = {
     },
     2: {
         "name": "The Door With the Wrong Label",
-        "objective": "The service doorway points nowhere. Fix the selector so traffic flows.",
+        "objective": (
+            "The [bold]greeting-service[/bold] exists but has [bold red]no endpoints[/bold red] -- traffic goes nowhere.\n\n"
+            "In Kubernetes, a Service finds its pods by matching [bold]labels[/bold] on pods against its own [bold]selector[/bold]. "
+            "If even one character is wrong, the service is deaf.\n\n"
+            "[bold white]Where to look:[/bold white] compare the selector in [bold]greeting-service[/bold] against the labels on the greeting pods.\n"
+            "[bold white]What to fix:[/bold white] there is a one-letter typo in the [bold]app[/bold] selector value.\n"
+            "[bold white]Useful commands:[/bold white] [bold]kubectl get endpoints[/bold], [bold]kubectl get pods --show-labels[/bold], [bold]kubectl get svc -o yaml[/bold]."
+        ),
         "skill": "Services, Label Matching & Endpoints",
         "hints": [
             "[cyan]Run [bold]kubectl get endpoints -n cluster-heist[/bold] — if the list is empty, the selector is broken.[/cyan]",
@@ -75,7 +89,14 @@ MISSIONS = {
     },
     3: {
         "name": "The ConfigMap Combination Lock",
-        "objective": "Inject VAULT_MODE and ROOM_NAME into the deployment via a ConfigMap.",
+        "objective": (
+            "The app needs two environment variables to unlock the next door: "
+            "[bold]VAULT_MODE[/bold] and [bold]ROOM_NAME[/bold]. "
+            "They should come from a ConfigMap, but the values are wrong.\n\n"
+            "[bold white]Where to look:[/bold white] the ConfigMap named [bold]heist-config[/bold] in namespace [bold]cluster-heist[/bold].\n"
+            "[bold white]What to fix:[/bold white] set [bold]VAULT_MODE[/bold] to [bold]training[/bold] and [bold]ROOM_NAME[/bold] to [bold]helm-lab[/bold].\n"
+            "[bold white]After editing:[/bold white] restart the deployment so the pod picks up the new values."
+        ),
         "skill": "ConfigMaps & Environment Variables",
         "hints": [
             "[cyan]Check existing ConfigMaps: [bold]kubectl get configmap -n cluster-heist[/bold][/cyan]",
@@ -85,7 +106,16 @@ MISSIONS = {
     },
     4: {
         "name": "The Secret Vault Key",
-        "objective": "Inject VAULT_TOKEN securely using a Kubernetes Secret.",
+        "objective": (
+            "The app expects a sensitive token in the env var [bold]VAULT_TOKEN[/bold], "
+            "but the Secret is missing entirely.\n\n"
+            "Secrets work like ConfigMaps but are base64-encoded and kept out of plain YAML. "
+            "You need to create the Secret and make sure the deployment references it.\n\n"
+            "[bold white]Secret name:[/bold white] [bold]vault-key[/bold]\n"
+            "[bold white]Key:[/bold white] [bold]VAULT_TOKEN[/bold]\n"
+            "[bold white]Value:[/bold white] [bold]golden-yaml-42[/bold]\n"
+            "[bold white]After creating:[/bold white] restart the deployment."
+        ),
         "skill": "Kubernetes Secrets",
         "hints": [
             "[cyan]Check existing secrets: [bold]kubectl get secrets -n cluster-heist[/bold][/cyan]",
@@ -95,7 +125,14 @@ MISSIONS = {
     },
     5: {
         "name": "The Sidecar Informant",
-        "objective": "Extract hidden clue parameters from two sidecar container logs.",
+        "objective": (
+            "A pod named [bold]sidecar-informant[/bold] is running three containers. "
+            "The main container is not talking -- but the two sidecar containers are logging clues.\n\n"
+            "Use [bold]kubectl logs <pod> -c <container>[/bold] to read each sidecar separately. "
+            "The clues tell you what Redis config values need to be set for the next mission.\n\n"
+            "[bold white]Containers to read:[/bold white] [bold]clue-log-1[/bold] and [bold]clue-log-2[/bold]\n"
+            "[bold white]Goal:[/bold white] retrieve the log output from both sidecars to pass verification."
+        ),
         "skill": "Multi-container Pods & Log Streaming",
         "hints": [
             "[cyan]Find the multi-container pod: [bold]kubectl get pods -n cluster-heist[/bold] — look for sidecar-informant.[/cyan]",
@@ -105,7 +142,15 @@ MISSIONS = {
     },
     6: {
         "name": "The Redis Red Herring",
-        "objective": "Replace hardcoded localhost DB references with the redis-service DNS name.",
+        "objective": (
+            "The message service is trying to connect to Redis at [bold red]localhost[/bold red] -- "
+            "which does not exist inside a Kubernetes cluster.\n\n"
+            "In Kubernetes, services talk to each other using DNS names, not localhost. "
+            "The Redis service is already running; the app just has the wrong address.\n\n"
+            "[bold white]Where to look:[/bold white] the [bold]REDIS_HOST[/bold] env var on [bold]message-deployment[/bold].\n"
+            "[bold white]What to fix:[/bold white] change [bold]localhost[/bold] to [bold]redis-service[/bold].\n"
+            "[bold white]How to fix:[/bold white] use [bold]kubectl set env[/bold] or edit the deployment."
+        ),
         "skill": "Internal Service Discovery & Cluster DNS",
         "hints": [
             "[cyan]Inspect env vars: [bold]kubectl describe deployment message-deployment -n cluster-heist[/bold][/cyan]",
@@ -115,7 +160,14 @@ MISSIONS = {
     },
     7: {
         "name": "The Helm Upgrade Gambit",
-        "objective": "Edit values.yaml to scale replicas to 3, swap image tags, and enable vault settings.",
+        "objective": (
+            "The Helm release is deployed with broken values. Three things need fixing in [bold]values.yaml[/bold]:\n\n"
+            "  1. [bold]replicaCount[/bold] must be [bold]3[/bold] (currently 1)\n"
+            "  2. [bold]greeting.image.tag[/bold] must be [bold]stable[/bold] (currently broken)\n"
+            "  3. [bold]vault.enabled[/bold] must be [bold]true[/bold] (currently false)\n\n"
+            "[bold white]File to edit:[/bold white] [bold]charts/cluster-heist/values.yaml[/bold]\n"
+            "[bold white]After editing:[/bold white] run [bold]helm upgrade[/bold] to apply the new values to the cluster."
+        ),
         "skill": "Helm Chart Architecture & helm upgrade",
         "hints": [
             "[cyan]Inspect current values: [bold]helm get values cluster-heist -n cluster-heist[/bold][/cyan]",
@@ -125,7 +177,14 @@ MISSIONS = {
     },
     8: {
         "name": "Final Boss: The Two-Service Betrayal",
-        "objective": "Fix inter-service env vars so DNS routing resolves through the Ingress.",
+        "objective": (
+            "Two services need to talk to each other: [bold]greeting-service[/bold] calls [bold]message-service[/bold]. "
+            "But the greeting deployment has the wrong URL hardcoded -- it points to [bold red]localhost[/bold red].\n\n"
+            "Fix the [bold]MESSAGE_SERVICE_URL[/bold] env var so it uses the correct Kubernetes DNS name.\n\n"
+            "[bold white]Correct URL:[/bold white] [bold]http://message-service:8080/message[/bold]\n"
+            "[bold white]Where to fix:[/bold white] [bold]greeting-deployment[/bold] env vars (or Helm values + upgrade)\n"
+            "[bold white]Final test:[/bold white] [bold]curl http://cluster-heist.local/greeting[/bold] should return [bold green]VAULT OPENED[/bold green]."
+        ),
         "skill": "Ingress Rules & Cross-Service DNS",
         "hints": [
             "[cyan]Check the Ingress: [bold]kubectl get ingress -n cluster-heist[/bold] and [bold]kubectl describe ingress heist-ingress -n cluster-heist[/bold][/cyan]",
