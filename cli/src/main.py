@@ -587,7 +587,7 @@ def _verify_final_boss() -> bool:
         "kubectl", "run", pod_name,
         "--image=curlimages/curl:8.7.1",
         "--restart=Never",
-        "--rm", "-i",
+        "--rm",
         "-n", ns,
         "--command", "--",
         "curl", "-s", "--max-time", "10",
