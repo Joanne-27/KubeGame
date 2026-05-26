@@ -5,7 +5,7 @@ replicaCount: 1
 greeting:
   image:
     repository: nginxx          # Mission 1 flaw: typo, should be nginx
-    tag: "stable"               # Mission 7 flaw: should be "stable"
+    tag: "broken"               # Mission 7 flaw: must be changed to "stable"
     pullPolicy: IfNotPresent
   # Final Boss flaw: must be changed to http://message-service:8080/message
   messageServiceUrl: "http://localhost:8080/message"

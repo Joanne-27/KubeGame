@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Cluster Heist: The Helm Job — Game Master CLI"""
 
+import base64
+import copy
 import io
 import json
 import os
@@ -44,7 +46,7 @@ def load_state() -> dict:
     if STATE_PATH.exists():
         with open(STATE_PATH) as f:
             return json.load(f)
-    return dict(DEFAULT_STATE)
+    return copy.deepcopy(DEFAULT_STATE)
 
 def save_state(state: dict) -> None:
     STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -295,10 +297,16 @@ def status():
     table.add_column("Mission", style="white")
     table.add_column("Status", justify="center")
 
+    current_key = MISSION_KEYS[min(cur - 1, 7)]
     for key in MISSION_KEYS:
         done = state["missions"].get(key, False)
-        icon = "[bold green]✔[/bold green]" if done else "[dim]○[/dim]"
-        status_text = "[green]COMPLETE[/green]" if done else "[dim]LOCKED[/dim]"
+        is_current = (key == current_key) and not done
+        if done:
+            icon, status_text = "[bold green]✔[/bold green]", "[green]COMPLETE[/green]"
+        elif is_current:
+            icon, status_text = "[bold yellow]▶[/bold yellow]", "[bold yellow]IN PROGRESS[/bold yellow]"
+        else:
+            icon, status_text = "[dim]○[/dim]", "[dim]LOCKED[/dim]"
         table.add_row(icon, mission_display_name(key), status_text)
 
     console.print(table)
@@ -322,9 +330,9 @@ def score():
 
     # Achievements
     achievements = []
-    if state["hints_used"] == 0:
+    if completed == 8 and state["hints_used"] == 0:
         achievements.append("[bold gold1]🥇 Ghost Operative[/bold gold1] — Completed without any hints")
-    if s == 100:
+    if completed == 8 and s == 100:
         achievements.append("[bold gold1]💯 Perfect Heist[/bold gold1] — Full credits retained")
     if completed == 8:
         achievements.append("[bold cyan]🎯 Full Clearance[/bold cyan] — All missions complete")
@@ -456,7 +464,6 @@ def _verify_mission_3() -> bool:
 def _verify_mission_4() -> bool:
     """Secret Vault Key: vault-key secret must exist with correct VAULT_TOKEN."""
     ns = "cluster-heist"
-    import base64
     result = _run(["kubectl", "get", "secret", "vault-key", "-n", ns,
                    "-o", "jsonpath={.data.VAULT_TOKEN}"])
     if result.returncode != 0 or not result.stdout.strip():
@@ -519,20 +526,21 @@ def _verify_mission_6() -> bool:
         _fail(f"redis-service port is '{svc.stdout.strip()}', expected 6379."); return False
     _ok("redis-service is active on port 6379.")
 
-    # Check no deployment env var still points to localhost for Redis
-    envs = _run(["kubectl", "get", "deployments", "-n", ns,
-                 "-o", "jsonpath={.items[*].spec.template.spec.containers[*].env[*].value}"])
-    values = envs.stdout.split()
-    if "localhost" in values:
-        _fail("A deployment env var still references 'localhost'. Update it to 'redis-service'."); return False
-    _ok("No deployment env vars reference 'localhost'.")
+    # Check message-deployment's REDIS_HOST no longer points to localhost
+    envs = _run(["kubectl", "get", "deployment", "message-deployment", "-n", ns,
+                 "-o", "jsonpath={.spec.template.spec.containers[0].env[*].value}"])
+    if envs.returncode != 0:
+        _fail("message-deployment not found."); return False
+    if "localhost" in envs.stdout.split():
+        _fail("message-deployment still has an env var set to 'localhost'. Update REDIS_HOST to 'redis-service'."); return False
+    _ok("message-deployment REDIS_HOST no longer references 'localhost'.")
     return True
 
 
 def _verify_mission_7() -> bool:
     """Helm Upgrade Gambit: replicaCount=3, image.tag=stable, vault.enabled=true."""
     result = _run(["helm", "get", "values", "cluster-heist",
-                   "-n", "cluster-heist", "--output", "json"])
+                   "-n", "cluster-heist", "--all", "--output", "json"])
     if result.returncode != 0:
         _fail("Could not retrieve Helm values. Is the release deployed?"); return False
 
@@ -549,11 +557,11 @@ def _verify_mission_7() -> bool:
     else:
         _ok("replicaCount = 3 ✔")
 
-    tag = values.get("image", {}).get("tag")
+    tag = values.get("greeting", {}).get("image", {}).get("tag")
     if tag != "stable":
-        _fail(f"image.tag is '{tag}', expected 'stable'."); passed = False
+        _fail(f"greeting.image.tag is '{tag}', expected 'stable'."); passed = False
     else:
-        _ok("image.tag = stable ✔")
+        _ok("greeting.image.tag = stable ✔")
 
     vault_enabled = values.get("vault", {}).get("enabled")
     if vault_enabled is not True:
@@ -617,6 +625,21 @@ _VERIFIERS = {
 def verify():
     """Run the verification check for the current mission."""
     state = load_state()
+
+    if state["missions"].get("final_boss"):
+        console.print(Panel(
+            "[bold green]You have already completed the heist!\n"
+            "Run [bold cyan]cluster-heist score[/bold cyan] to see your final rank.[/bold green]",
+            title="[bold green]// HEIST COMPLETE //[/bold green]",
+            border_style="green",
+        ))
+        return
+
+    chk = subprocess.run(["kubectl", "cluster-info"], capture_output=True, text=True)
+    if chk.returncode != 0:
+        console.print("[bold red][ERROR][/bold red] No cluster reachable. Run [bold]minikube start[/bold] first.")
+        sys.exit(1)
+
     cur = state["current_mission"]
 
     if cur not in _VERIFIERS:
@@ -638,13 +661,24 @@ def verify():
 
     if passed:
         state["missions"][m_key] = True
-        state["current_mission"] = min(cur + 1, 8)
+        if cur < 8:
+            state["current_mission"] = cur + 1
         save_state(state)
-        console.print(Panel(
-            f"[bold green]Mission {cur} complete! Moving to Mission {state['current_mission']}.[/bold green]",
-            border_style="green",
-        ))
-        if state["current_mission"] <= 8:
+
+        if cur == 8:
+            console.print(Panel(
+                "[bold green]THE VAULT IS OPEN. HEIST COMPLETE.\n\n"
+                "You cracked ClusterBank. Ghost is out clean.\n"
+                "The crew made it.[/bold green]\n\n"
+                "Run [bold cyan]cluster-heist score[/bold cyan] to see your final rank and achievements.",
+                title="[bold red]// TRANSMISSION ENDS //[/bold red]",
+                border_style="gold1",
+            ))
+        else:
+            console.print(Panel(
+                f"[bold green]Mission {cur} complete! Moving to Mission {state['current_mission']}.[/bold green]",
+                border_style="green",
+            ))
             _print_mission(state["current_mission"])
     else:
         console.print(Panel(
